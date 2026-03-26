@@ -9,7 +9,7 @@ description: 了解 Wuji Hand SDK (wujihandpy) 的安装配置、快速上手示
 - 操作系统：Ubuntu 22.04 LTS / Ubuntu 24.04 LTS
 
 ## 2. 安装指南
-本节介绍 wujihandpy 的安装方法以及常见安装问题的解决方案。  
+本节介绍 wujihandpy 的安装方法和常见问题解决。  
 
 ### 2.1 安装
 wujihandpy 支持 `pip` 一键安装：
@@ -17,7 +17,7 @@ wujihandpy 支持 `pip` 一键安装：
 pip install wujihandpy
 ```
 <Callout type="warning">
-  说明：除非希望对 wujihandpy 进行二次开发，否则请勿将 wujihandpy 的 Git Repo 克隆至本地，否则可能导致 IDE 误判 .pyi 文件的位置，造成代码补全异常。
+  说明：除非对 wujihandpy 进行二次开发，否则勿将其 Git 仓库克隆至本地，可能导致 IDE 误判 .pyi 文件的位置，造成代码补全异常。
 </Callout>
 
 Linux 需配置 udev 以允许非 root 访问 USB：
@@ -33,7 +33,7 @@ sudo udevadm trigger
 </Callout>
 
 ## 3. 快速上手
-本节给出最小可运行示例，帮助快速测试灵巧手与 wujihandpy 库。
+本节给出最小可运行示例，快速测试灵巧手与 wujihandpy 库。
 ```python
 # quickstart.py
 import time
