@@ -9,7 +9,7 @@ description: Learn about Wuji Hand SDK (wujihandpy) installation, quick start ex
 - OS: Ubuntu 22.04 LTS / Ubuntu 24.04 LTS
 
 ## 2. Installation Guide
-This section covers the installation of wujihandpy, system requirements, and solutions to common installation issues.  
+This section covers the installation of wujihandpy, system requirements, and common troubleshooting.  
 
 ### 2.1 Installation
 wujihandpy supports one-step installation via `pip`:
@@ -17,7 +17,7 @@ wujihandpy supports one-step installation via `pip`:
 pip install wujihandpy
 ```
 <Callout type="warning">
-  Note: Unless you intend to develop wujihandpy itself, do not clone the wujihandpy Git repository locally, as this may cause your IDE to misidentify the location of .pyi files, resulting in abnormal code completion.
+  Note: Unless you're developing wujihandpy itself, don't clone its Git repository locally—this may cause your IDE to misidentify .pyi file locations, resulting in abnormal code completion.
 </Callout>
 
 On Linux, configure udev to allow non-root USB access:
@@ -33,7 +33,7 @@ sudo udevadm trigger
 </Callout>
 
 ## 3. Quick Start
-This section provides a minimal working example to help you quickly test the dexterous hand with the wujihandpy library.
+This section provides a minimal working example to quickly test the dexterous hand with the wujihandpy library.
 ```python
 # quickstart.py
 import time
