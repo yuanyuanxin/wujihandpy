@@ -355,7 +355,7 @@ finally:
     hand.write_joint_enabled(False)
 ```
 
-### 4.7 Advanced Examples
+### 4.6 Advanced Examples
 - [example/3.realtime.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/3.realtime.py)
 
 
@@ -397,8 +397,8 @@ async def main():
     try:
         await hand.write_joint_enabled_async(True)
         # Execute the following tasks in parallel:
-        # - Move index finger joint 1 to 1.57 rad (approximately 90° downward)
-        # - Move index finger joint 3 to 1.57 rad (approximately 90° downward)
+        # - Move index finger joint 0 to 1.57 rad (approximately 90° downward)
+        # - Move index finger joint 2 to 1.57 rad (approximately 90° downward)
         # - Wait for 0.5 seconds simultaneously
         await asyncio.gather(
             hand.finger(1).joint(0).write_joint_target_position_async(1.57),
@@ -412,7 +412,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### 5.3 Advanced Examples
+### 5.2 Advanced Examples
 - [example/4.async.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/4.async.py)
 
 
@@ -500,7 +500,7 @@ with hand.realtime_controller(
         t.join()
 ```
 
-### 6.4 Expected Output
+### 6.3 Expected Output
 
 After running the example, the terminal will display output similar to the following:
 
@@ -536,5 +536,5 @@ Thread safety check disabled, multi-threaded access enabled
 - The two threads output alternately, and the order may be interleaved (this is normal behavior for multi-threading)
 - F1 (thumb) remains stationary, while F2 (index), F3 (middle), F4 (ring), and F5 (pinky) perform periodic flexion-extension movements
 
-### 6.5 Advanced Examples
+### 6.4 Advanced Examples
 - [example/5.multithread.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/5.multithread.py)

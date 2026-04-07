@@ -144,6 +144,8 @@ Effort is the actuation effort in current space, filtered before output.
 Typical use cases:
 - Collision detection: sudden increase in effort indicates joint obstruction
 - Output monitoring: calculate output percentage via `effort / effort_limit`
+
+This field is only accessible through `IController.get_joint_actual_effort()` in real-time control mode.
 </Callout>
 
 #### joint_enabled

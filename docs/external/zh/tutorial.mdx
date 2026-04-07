@@ -354,7 +354,7 @@ finally:
     hand.write_joint_enabled(False)
 ```
 
-### 4.7 进阶示例
+### 4.6 进阶示例
 - [example/3.realtime.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/3.realtime.py)
 
 
@@ -396,8 +396,8 @@ async def main():
     try:
         await hand.write_joint_enabled_async(True)
         # 并行执行以下任务：
-        # - 使食指第 1 关节转至 1.57 rad（约 90° 下压）
-        # - 使食指第 3 关节转至 1.57 rad（约 90° 下压）
+        # - 使食指第 0 关节转至 1.57 rad（约 90° 下压）
+        # - 使食指第 2 关节转至 1.57 rad（约 90° 下压）
         # - 同时等待 0.5 秒
         await asyncio.gather(
             hand.finger(1).joint(0).write_joint_target_position_async(1.57),
@@ -411,7 +411,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### 5.3 进阶示例
+### 5.2 进阶示例
 - [example/4.async.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/4.async.py)
 
 
@@ -499,7 +499,7 @@ with hand.realtime_controller(
         t.join()
 ```
 
-### 6.4 预期效果
+### 6.3 预期效果
 
 运行示例后，终端将输出类似以下内容：
 
@@ -535,5 +535,5 @@ Thread safety check disabled, multi-threaded access enabled
 - 两个线程交替输出，顺序可能交错，这是多线程的正常现象
 - F1（拇指）保持不动，F2（食指）、F3（中指）、F4（无名指）、F5（小指）会做周期性弯曲-伸展动作
 
-### 6.5 进阶示例
+### 6.4 进阶示例
 - [example/5.multithread.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/5.multithread.py)
