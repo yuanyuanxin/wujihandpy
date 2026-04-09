@@ -815,3 +815,187 @@ This field records the lower position limit of the joint.
 - **Asynchronous Operations** (`*_async`): Returns Awaitable objects, supports await syntax
 - **Non-blocking Operations** (`*_unchecked`): Returns immediately, does not guarantee operation success, suitable for high-frequency scenarios
 - **Cached Retrieval** (`get_*`): Gets the most recently read data, does not block
+
+
+---
+
+## 3. Tactile Sensing Glove
+
+The Tactile Sensing Glove is an optional tactile perception accessory for Wuji Hand. The SDK provides device connection and data reading through the `TactileBoard` class.
+
+### 3.1 Core Classes
+
+#### TactileHandedness
+
+Handedness enum:
+- `TactileHandedness.LEFT` (0): Left hand
+- `TactileHandedness.RIGHT` (1): Right hand
+
+#### TactileFrame
+
+Single-frame tactile data with the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `hand` | `TactileHandedness` | Left or right hand |
+| `sequence` | `int` (uint16) | Frame counter, wraps at 65535 |
+| `timestamp_ms` | `int` (uint32) | Milliseconds since device boot |
+| `pressure` | `numpy.ndarray` (24, 32) int16 | Pressure matrix |
+| `crc_valid` | `bool` | CRC16 validation result |
+
+**Pressure value semantics:**
+- Range: 0–2135
+- 2135 = no pressure (sensor open-circuit)
+- 0 = maximum pressure (theoretical limit)
+- Lower values indicate higher pressure (inverted mapping)
+
+#### TactileBoard
+
+Connection and data reading for the Tactile Sensing Glove.
+
+**Constructor:**
+```python
+TactileBoard(serial_number: str | None = None)
+```
+- `serial_number`: USB device serial number. `None` auto-discovers the first available device
+
+### 3.2 Device Connection
+
+#### Auto-discovery
+```python
+from wujihandpy import TactileBoard
+
+board = TactileBoard()
+board.connect()  # Returns True on success
+```
+
+#### Specific device
+```python
+board = TactileBoard(serial_number="ABC123")
+board.connect()
+```
+
+#### Context manager
+```python
+with TactileBoard() as board:
+    frame = board.read_frame()
+```
+
+#### Connection management methods
+- `connect() -> bool`: Connect to device. Returns `True` on success
+- `disconnect() -> None`: Disconnect and stop streaming
+- `is_connected() -> bool`: Query connection status
+- `handedness() -> TactileHandedness`: Return device handedness (valid after first read)
+
+### 3.3 Data Reading
+
+#### Blocking read
+
+```python
+frame = board.read_frame(timeout_ms=100)
+print(f"Sequence: {frame.sequence}")
+print(f"Pressure shape: {frame.pressure.shape}")  # (24, 32)
+print(f"CRC valid: {frame.crc_valid}")
+```
+
+- Performs frame synchronization and CRC validation
+- Raises `TimeoutError` on timeout
+- Raises `ConnectionError` on disconnect
+
+#### Streaming callback
+
+```python
+def on_frame(frame):
+    print(f"Seq={frame.sequence}, Min={frame.pressure.min()}")
+
+board.start_streaming(on_frame)
+# ... application logic ...
+board.stop_streaming()
+```
+
+- Callback invoked on internal reader thread
+- On disconnect, receives a zero-initialized frame with `crc_valid=False`, then stops automatically
+- `start_streaming` and `read_frame` are mutually exclusive
+- All blocking operations release the Python GIL
+
+### 3.4 Exception Handling
+
+| Exception | Trigger |
+|-----------|---------|
+| `ConnectionError` | USB device disconnected |
+| `TimeoutError` | `read_frame` timed out (no valid frame after 20 consecutive sync attempts) |
+
+### 3.5 Complete Example
+
+```python
+import numpy as np
+from wujihandpy import TactileBoard, TactileHandedness
+
+# Connect
+board = TactileBoard()
+if not board.connect():
+    print("Tactile Sensing Glove not found")
+    exit(1)
+
+hand = board.handedness()
+print(f"Connected to {'left' if hand == TactileHandedness.LEFT else 'right'}-hand Tactile Sensing Glove")
+
+# Stream and collect
+frames = []
+
+def collect(frame):
+    if frame.crc_valid:
+        frames.append(frame.pressure.copy())
+
+board.start_streaming(collect)
+
+try:
+    import time
+    time.sleep(5)  # Collect for 5 seconds
+finally:
+    board.stop_streaming()
+    board.disconnect()
+
+# Save data
+data = np.stack(frames)  # shape: (N, 24, 32)
+np.save("tactile_data.npy", data)
+print(f"Collected {len(frames)} frames, saved to tactile_data.npy")
+```
+
+### 3.6 Protocol Reference
+
+This section is for advanced developers who need to parse tactile data frames directly. The `TactileBoard` class handles all protocol details automatically.
+
+#### Data frame format
+
+The Tactile Sensing Glove streams fixed 1550-byte frames at 120 Hz over USB CDC (virtual serial port):
+
+| Offset | Length | Field | Type | Description |
+|--------|--------|-------|------|-------------|
+| 0–1 | 2 | Header | u8[2] | Fixed `0xAA 0x55` |
+| 2–3 | 2 | Frame length | u16 LE | Fixed 1550 |
+| 4 | 1 | Hand | u8 | `0x00` = left, `0x01` = right |
+| 5 | 1 | Reserved | u8 | Fixed `0x00` |
+| 6–1541 | 1536 | Tactile data | i16[24][32] LE | Pressure matrix, row-major |
+| 1542–1543 | 2 | Sequence | u16 LE | Frame counter, wraps at 65535 |
+| 1544–1547 | 4 | Timestamp | u32 LE | Milliseconds since device boot |
+| 1548–1549 | 2 | CRC16 | u16 LE | CRC16-CCITT checksum |
+
+#### CRC16-CCITT
+
+- Polynomial: `0x1021`, initial value: `0xFFFF`
+- Coverage: bytes [2, 1548) (frame length through timestamp, 1546 bytes)
+- Excludes header and CRC field
+
+#### Frame synchronization algorithm
+
+1. Scan byte-by-byte for header `0xAA 0x55`
+2. Read bytes 2–3, verify frame length == 1550
+3. Read remaining bytes to complete the frame
+4. Compute CRC16 and compare
+5. CRC failure: discard, resume scanning from header_position + 1
+6. CRC success: parse and deliver frame
+
+<Callout type="info">
+`0xAA 0x55` may appear within pressure data (false headers). CRC validation is the only reliable way to distinguish real headers from false ones.
+</Callout>
