@@ -957,9 +957,12 @@ finally:
     board.disconnect()
 
 # 保存数据
-data = np.stack(frames)  # shape: (N, 24, 32)
-np.save("tactile_data.npy", data)
-print(f"采集 {len(frames)} 帧，保存至 tactile_data.npy")
+if frames:
+    data = np.stack(frames)  # shape: (N, 24, 32)
+    np.save("tactile_data.npy", data)
+    print(f"采集 {len(frames)} 帧，保存至 tactile_data.npy")
+else:
+    print("未采集到有效帧")
 ```
 
 ### 3.6 协议参考

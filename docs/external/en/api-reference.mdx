@@ -957,9 +957,12 @@ finally:
     board.disconnect()
 
 # Save data
-data = np.stack(frames)  # shape: (N, 24, 32)
-np.save("tactile_data.npy", data)
-print(f"Collected {len(frames)} frames, saved to tactile_data.npy")
+if frames:
+    data = np.stack(frames)  # shape: (N, 24, 32)
+    np.save("tactile_data.npy", data)
+    print(f"Collected {len(frames)} frames, saved to tactile_data.npy")
+else:
+    print("No valid frames collected")
 ```
 
 ### 3.6 Protocol Reference
