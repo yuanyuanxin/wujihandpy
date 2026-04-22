@@ -899,7 +899,7 @@ print(f"CRC 校验: {frame.crc_valid}")
 ```
 
 - 执行帧同步和 CRC 校验
-- 超时抛出 `TimeoutError`
+- 超时抛出 `RuntimeError`
 - 连接断开抛出 `ConnectionError`
 
 #### 流式回调
@@ -923,7 +923,7 @@ board.stop_streaming()
 | 异常 | 触发场景 |
 |------|----------|
 | `ConnectionError` | USB 设备断开连接 |
-| `TimeoutError` | `read_frame` 超时（连续 20 次帧同步尝试后无有效帧） |
+| `RuntimeError` | `read_frame` 超时（连续 20 次帧同步尝试后无有效帧） |
 
 ### 3.5 完整示例
 

@@ -899,7 +899,7 @@ print(f"CRC valid: {frame.crc_valid}")
 ```
 
 - Performs frame synchronization and CRC validation
-- Raises `TimeoutError` on timeout
+- Raises `RuntimeError` on timeout
 - Raises `ConnectionError` on disconnect
 
 #### Streaming callback
@@ -923,7 +923,7 @@ board.stop_streaming()
 | Exception | Trigger |
 |-----------|---------|
 | `ConnectionError` | USB device disconnected |
-| `TimeoutError` | `read_frame` timed out (no valid frame after 20 consecutive sync attempts) |
+| `RuntimeError` | `read_frame` timed out (no valid frame after 20 consecutive sync attempts) |
 
 ### 3.5 Complete Example
 
