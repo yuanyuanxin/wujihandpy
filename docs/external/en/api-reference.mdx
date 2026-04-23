@@ -947,14 +947,15 @@ def collect(frame):
     if frame.crc_valid:
         frames.append(frame.pressure.copy())
 
-board.start_streaming(collect)
-
 try:
+    board.start_streaming(collect)
     import time
     time.sleep(5)  # Collect for 5 seconds
 finally:
-    board.stop_streaming()
-    board.disconnect()
+    try:
+        board.stop_streaming()
+    finally:
+        board.disconnect()
 
 # Save data
 if frames:
