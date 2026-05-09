@@ -51,8 +51,8 @@ PYBIND11_MODULE(_core, m) {
             PyErr_SetString(PyExc_TimeoutError, e.what());
         } catch (const wujihandcpp::device::ConnectionError& e) {
             // Hand USB transport failures: device-not-found, multi-match
-            // without serial filter, or libusb transfer-submit failure.
-            // Mirrors the Glove transport-error mapping above.
+            // without serial filter, libusb transfer-submit failure, or
+            // runtime disconnection detected by the receive loop.
             PyErr_SetString(PyExc_ConnectionError, e.what());
         }
     });

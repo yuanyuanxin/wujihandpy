@@ -15,9 +15,10 @@ public:
 };
 
 /// USB transport-layer connection failure: device-not-found, multi-match
-/// without serial filter, or libusb transfer-submit failure during runtime.
-/// Inherits std::runtime_error so existing C++ catch blocks keep working;
-/// the Python binding maps it to stdlib ConnectionError.
+/// without serial filter, libusb transfer-submit failure, or runtime
+/// disconnection detected by the receive loop. Inherits std::runtime_error
+/// so existing C++ catch blocks keep working; the Python binding maps it to
+/// stdlib ConnectionError.
 class ConnectionError : public std::runtime_error {
 public:
     using runtime_error::runtime_error;
