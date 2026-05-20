@@ -985,7 +985,13 @@ else:
     print("No frames collected")
 ```
 
-### 3.7 Protocol Reference
+### 3.7 Use with Wuji Hand
+
+`Hand` and `TactileGlove` use independent USB transports and threads, so the two APIs compose in the same process with no extra coordination. The frame callback fires on the glove's streaming consumer thread; joint commands run on the thread that calls them. This pattern enables closed-loop scenarios where tactile feedback drives motion—for example, scaling joint amplitude by the current pressure peak.
+
+See `example/joint_with_tactile.py` in the wujihandpy repository for a working example.
+
+### 3.8 Protocol Reference
 
 This section is for advanced developers who need to parse tactile data frames directly. The `TactileGlove` class handles all protocol details automatically.
 
