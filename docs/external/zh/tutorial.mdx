@@ -537,3 +537,59 @@ Thread safety check disabled, multi-threaded access enabled
 
 ### 6.4 进阶示例
 - [example/joint/5.multithread.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/joint/5.multithread.py)
+
+
+## 7. USB 断连处理
+设备运行期间，灵巧手与电脑之间的 USB 连接可能中断，例如数据线被拔出。本节介绍 wujihandpy 在断连时的行为，以及捕获断连异常的方法。
+
+### 7.1 断连时的行为
+USB 连接中断时，wujihandpy 会抛出异常。捕获该异常即可在断连后恢复，进程不会崩溃。
+
+断连后再次发起的操作会立即抛出 Python 内置的 `ConnectionError`，不再等待 500 ms 超时，涉及接口包括：
+
+- 同步读 / 写（`read_*` / `write_*`）
+- 异步读 / 写（`read_*_async` / `write_*_async`）
+- 实时控制器关闭（`IController.close()`）
+
+<Callout type="info">
+  断连瞬间已在等待中的异步请求是个例外：它会以 `TimeoutError` 结束，而非 `ConnectionError`。若代码中存在并发的异步操作，建议捕获两者的共同基类 `OSError`，即可同时覆盖断连与超时。
+</Callout>
+
+### 7.2 捕获断连异常
+将设备操作放入 `try` 块，捕获 `ConnectionError` 即可处理断连：
+
+```python
+import wujihandpy
+import time
+
+
+def main():
+    hand = wujihandpy.Hand()
+    print("Reading. Unplug USB to test disconnect handling.\n")
+
+    try:
+        while True:
+            v = hand.read_input_voltage()
+            print(f"input_voltage: {v:.2f}V")
+            time.sleep(0.5)
+    except ConnectionError as e:
+        print(f"\nDisconnect detected: {e}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+运行脚本后，在读取过程中拔出 USB 线缆，循环会立即被 `ConnectionError` 中断，程序正常退出而不会崩溃。
+
+### 7.3 实时控制模式下的断连检测
+<Callout type="warning">
+  实时控制器的非阻塞接口（`set_joint_target_position()`、`get_joint_actual_position()`、`get_joint_actual_effort()`）在断连时**不会**抛出 `ConnectionError`。
+</Callout>
+
+实时控制环路依赖 PDO 高速数据，断连时这些接口仅停止更新缓存，不抛出异常。若需在实时控制场景中检测断连，请在旁路低速循环中周期性调用一次同步读取（如 `read_input_voltage()`）作为探测，并捕获 `ConnectionError`。
+
+此外，实时控制器以上下文管理器使用时，`with` 块结束会自动调用 `close()`。若设备此时已断连，`close()` 会抛出 `ConnectionError`，建议一并捕获。
+
+### 7.4 更多示例
+- [example/joint/6.disconnect.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/joint/6.disconnect.py)
