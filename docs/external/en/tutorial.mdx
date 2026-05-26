@@ -538,3 +538,58 @@ Thread safety check disabled, multi-threaded access enabled
 
 ### 6.4 Advanced Examples
 - [example/joint/5.multithread.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/joint/5.multithread.py)
+
+
+## 7. USB Disconnect Handling
+During operation, the USB connection between the dexterous hand and the computer can drop—for example, when the data cable is unplugged. This section describes how wujihandpy behaves on disconnect and how to catch disconnect exceptions.
+
+### 7.1 Disconnect Behavior
+On disconnect, wujihandpy raises an exception. Catch it to recover without crashing the process.
+
+An operation started after a disconnect raises Python's built-in `ConnectionError` immediately, without waiting for the 500 ms timeout. Affected interfaces include:
+
+- Synchronous read/write (`read_*` / `write_*`)
+- Asynchronous read/write (`read_*_async` / `write_*_async`)
+
+<Callout type="info">
+  An async request already in flight at the moment of disconnect is an exception: it ends with `TimeoutError` rather than `ConnectionError`. If your code runs concurrent async operations, catch their common base class `OSError` to cover both disconnect and timeout.
+</Callout>
+
+### 7.2 Catching Disconnect Exceptions
+Wrap device operations in a `try` block and catch `ConnectionError` to handle disconnects:
+
+```python
+import wujihandpy
+import time
+
+
+def main():
+    hand = wujihandpy.Hand()
+    print("Reading. Unplug USB to test disconnect handling.\n")
+
+    try:
+        while True:
+            v = hand.read_input_voltage()
+            print(f"input_voltage: {v:.2f}V")
+            time.sleep(0.5)
+    except ConnectionError as e:
+        print(f"\nDisconnect detected: {e}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Run the script, then unplug the USB cable while it reads. The loop is interrupted immediately by `ConnectionError`, and the program exits normally without crashing.
+
+### 7.3 Disconnect Detection in Real-Time Control Mode
+<Callout type="warning">
+  The real-time controller's non-blocking interfaces (`set_joint_target_position()`, `get_joint_actual_position()`, `get_joint_actual_effort()`) do **not** raise `ConnectionError` on disconnect.
+</Callout>
+
+Real-time control loops rely on high-speed PDO data. On disconnect, these interfaces simply stop updating the cache instead of raising an exception. To detect a disconnect in real-time scenarios, periodically call a synchronous read (such as `read_input_voltage()`) as a probe in a low-speed bypass loop, and catch `ConnectionError`.
+
+When the real-time controller is used as a context manager, the end of the `with` block automatically calls `close()` to clean up. `close()` also returns safely on disconnect, so no extra handling is needed.
+
+### 7.4 More Examples
+- [example/joint/6.disconnect.py](https://github.com/wuji-technology/wujihandpy/blob/main/example/joint/6.disconnect.py)
