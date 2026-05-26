@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Annotated, SupportsIndex
+from typing import TYPE_CHECKING, Optional, SupportsIndex
 
 from . import _core
 # `filter` and `logging` are wujihandpy submodules; the same-name shadowing
@@ -37,13 +37,20 @@ else:
     _HAS_TACTILE = True
 
 if TYPE_CHECKING:
+    # `Annotated` only landed in stdlib `typing` in 3.9; keeping its import
+    # in this block lets static type checkers resolve the `mask` annotation
+    # without forcing a runtime dependency on `typing_extensions` for 3.8
+    # users — `from __future__ import annotations` keeps the annotation a
+    # string at runtime, so the name is never evaluated.
+    from typing import Annotated
+
     import numpy
     import numpy.typing
 
 
 def _resolve_super_init_args(
-    serial_number: str | None,
-    side: str | None,
+    serial_number: Optional[str],
+    side: Optional[str],
     usb_pid: SupportsIndex,
     usb_vid: SupportsIndex,
     mask: object,
@@ -71,12 +78,12 @@ class Hand(_core.Hand):
 
     def __init__(
         self,
-        serial_number: str | None = None,
+        serial_number: Optional[str] = None,
         *,
-        side: str | None = None,
+        side: Optional[str] = None,
         usb_pid: SupportsIndex = 0x2000,
         usb_vid: SupportsIndex = 0x0483,
-        mask: Annotated[numpy.typing.ArrayLike, numpy.bool_] | None = None,
+        mask: Optional[Annotated[numpy.typing.ArrayLike, numpy.bool_]] = None,
     ) -> None:
         args, kwargs = _resolve_super_init_args(serial_number, side, usb_pid, usb_vid, mask)
         super().__init__(*args, **kwargs)
